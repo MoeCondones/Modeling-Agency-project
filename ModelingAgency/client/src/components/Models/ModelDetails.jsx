@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { imageHoverVariants } from '../../animations/hoverEffects';
@@ -18,11 +18,11 @@ const DetailsContainer = styled(motion.div)`
 
 const TopSection = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 532px;
   gap: 3rem;
   margin-bottom: 4rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: 992px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -30,25 +30,63 @@ const TopSection = styled.div`
 const ModelInfo = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 2rem;
 `;
 
-const ModelName = styled(motion.h1)`
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+const ModelFirstName = styled(motion.h1)`
+  font-size: 4rem;
   font-weight: 500;
   color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 3rem;
+  }
+`;
+
+const ModelLastName = styled(motion.h1)`
+  font-size: 4rem;
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  
+  @media (max-width: 768px) {
+    font-size: 3rem;
+  }
+`;
+
+const TabsContainer = styled.div`
+  display: flex;
+  margin: 3rem 0 2rem;
+  border-bottom: 1px solid var(--border-color);
+`;
+
+const Tab = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
   position: relative;
-  display: inline-block;
+  color: ${props => props.active ? 'var(--text-primary)' : 'var(--text-secondary)'};
+  font-weight: ${props => props.active ? '500' : '400'};
   
   &:after {
     content: '';
     position: absolute;
-    bottom: -15px;
+    bottom: -1px;
     left: 0;
-    width: 100px;
-    height: 3px;
-    background-color: var(--accent);
+    width: 100%;
+    height: 2px;
+    background-color: ${props => props.active ? 'var(--accent)' : 'transparent'};
+  }
+  
+  &:hover {
+    color: var(--text-primary);
   }
 `;
 
@@ -65,20 +103,21 @@ const SpecList = styled(motion.ul)`
   padding: 0;
   margin-top: 1.5rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem 2rem;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  max-width: 400px;
 `;
 
 const SpecItem = styled(motion.li)`
   display: flex;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.7rem;
 `;
 
 const SpecLabel = styled.span`
   font-weight: 500;
-  width: 80px;
+  width: 120px;
   color: var(--text-primary);
 `;
 
@@ -91,6 +130,16 @@ const ModelImageContainer = styled(motion.div)`
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 532px;
+  height: 744px;
+  
+  @media (max-width: 992px) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 9/16;
+    max-width: 532px;
+    margin: 0 auto;
+  }
 `;
 
 const ModelImage = styled.img`
@@ -221,11 +270,19 @@ const ErrorMessage = styled.div`
   max-width: 600px;
 `;
 
+const SectionContainer = styled(motion.div)`
+  padding: 1rem 0 3rem;
+`;
+
 const ModelDetails = ({ modelId }) => {
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [activeTab, setActiveTab] = useState('info');
+  
+  const infoRef = useRef(null);
+  const portfolioRef = useRef(null);
   
   useEffect(() => {
     const fetchModelDetails = async () => {
@@ -254,6 +311,28 @@ const ModelDetails = ({ modelId }) => {
     document.body.style.overflow = 'auto';
   };
   
+  const scrollToSection = (section) => {
+    if (section === 'info' && infoRef.current) {
+      infoRef.current.scrollIntoView({ behavior: 'smooth' });
+      setActiveTab('info');
+    } else if (section === 'portfolio' && portfolioRef.current) {
+      portfolioRef.current.scrollIntoView({ behavior: 'smooth' });
+      setActiveTab('portfolio');
+    }
+  };
+  
+  // Split the name into first and last name
+  const getFirstName = (name) => {
+    if (!name) return '';
+    return name.split(' ')[0];
+  };
+  
+  const getLastName = (name) => {
+    if (!name) return '';
+    const parts = name.split(' ');
+    return parts.slice(1).join(' ');
+  };
+  
   if (loading) {
     return (
       <LoadingContainer>
@@ -265,163 +344,165 @@ const ModelDetails = ({ modelId }) => {
     );
   }
   
-  if (error || !model) {
+  if (error) {
     return (
       <ErrorMessage>
-        <p>{error || 'Model not found'}</p>
-        <p>Please try again later or check the model ID.</p>
+        <h3>Error Loading Model Details</h3>
+        <p>{error}</p>
+      </ErrorMessage>
+    );
+  }
+  
+  if (!model) {
+    return (
+      <ErrorMessage>
+        <h3>Model Not Found</h3>
+        <p>The model you are looking for does not exist.</p>
       </ErrorMessage>
     );
   }
   
   return (
     <DetailsContainer
+      initial="hidden"
+      animate="visible"
       variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
     >
       <TopSection>
         <ModelInfo variants={elementVariants}>
-          <ModelName variants={textRevealVariants}>
-            {model.name}
-          </ModelName>
-          <ModelCategory variants={textRevealVariants}>
-            {model.category} | {model.gender}
-          </ModelCategory>
+          <ModelFirstName variants={textRevealVariants}>
+            {getFirstName(model.name)}
+          </ModelFirstName>
+          <ModelLastName variants={textRevealVariants}>
+            {getLastName(model.name)}
+          </ModelLastName>
           
-          <SpecList>
-            {model.height && (
-              <SpecItem variants={elementVariants}>
+          <TabsContainer>
+            <Tab 
+              active={activeTab === 'info'} 
+              onClick={() => scrollToSection('info')}
+            >
+              Info
+            </Tab>
+            <Tab 
+              active={activeTab === 'portfolio'} 
+              onClick={() => scrollToSection('portfolio')}
+            >
+              Portfolio
+            </Tab>
+          </TabsContainer>
+          
+          <SectionContainer ref={infoRef} variants={elementVariants}>
+            <ModelCategory>{model.category}</ModelCategory>
+            <SpecList variants={elementVariants}>
+              <SpecItem>
                 <SpecLabel>Height</SpecLabel>
-                <SpecValue>{model.height}</SpecValue>
+                <SpecValue>{model.height} cm</SpecValue>
               </SpecItem>
-            )}
-            {model.measurements && (
-              <>
-                {model.gender === 'Female' && (
-                  <>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Bust</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[0]}"</SpecValue>
-                    </SpecItem>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Waist</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[1]}"</SpecValue>
-                    </SpecItem>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Hips</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[2]}"</SpecValue>
-                    </SpecItem>
-                  </>
-                )}
-                {model.gender === 'Male' && (
-                  <>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Chest</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[0]}"</SpecValue>
-                    </SpecItem>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Waist</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[1]}"</SpecValue>
-                    </SpecItem>
-                    <SpecItem variants={elementVariants}>
-                      <SpecLabel>Hips</SpecLabel>
-                      <SpecValue>{model.measurements.split('-')[2]}"</SpecValue>
-                    </SpecItem>
-                  </>
-                )}
-              </>
-            )}
-            {model.shoeSize && (
-              <SpecItem variants={elementVariants}>
-                <SpecLabel>Shoes</SpecLabel>
+              <SpecItem>
+                <SpecLabel>Bust</SpecLabel>
+                <SpecValue>{model.measurements?.bust || 'N/A'} cm</SpecValue>
+              </SpecItem>
+              <SpecItem>
+                <SpecLabel>Waist</SpecLabel>
+                <SpecValue>{model.measurements?.waist || 'N/A'} cm</SpecValue>
+              </SpecItem>
+              <SpecItem>
+                <SpecLabel>Hips</SpecLabel>
+                <SpecValue>{model.measurements?.hips || 'N/A'} cm</SpecValue>
+              </SpecItem>
+              <SpecItem>
+                <SpecLabel>Shoe Size</SpecLabel>
                 <SpecValue>{model.shoeSize}</SpecValue>
               </SpecItem>
-            )}
-            {model.dressSize && model.gender === 'Female' && (
-              <SpecItem variants={elementVariants}>
-                <SpecLabel>Dress</SpecLabel>
-                <SpecValue>{model.dressSize}</SpecValue>
-              </SpecItem>
-            )}
-            {model.hairColor && (
-              <SpecItem variants={elementVariants}>
-                <SpecLabel>Hair</SpecLabel>
+              <SpecItem>
+                <SpecLabel>Hair Color</SpecLabel>
                 <SpecValue>{model.hairColor}</SpecValue>
               </SpecItem>
-            )}
-            {model.eyeColor && (
-              <SpecItem variants={elementVariants}>
-                <SpecLabel>Eyes</SpecLabel>
+              <SpecItem>
+                <SpecLabel>Eye Color</SpecLabel>
                 <SpecValue>{model.eyeColor}</SpecValue>
               </SpecItem>
-            )}
-            {model.age && (
-              <SpecItem variants={elementVariants}>
-                <SpecLabel>Age</SpecLabel>
-                <SpecValue>{model.age}</SpecValue>
-              </SpecItem>
-            )}
-          </SpecList>
+              {model.gender && (
+                <SpecItem>
+                  <SpecLabel>Gender</SpecLabel>
+                  <SpecValue>{model.gender}</SpecValue>
+                </SpecItem>
+              )}
+              {model.age && (
+                <SpecItem>
+                  <SpecLabel>Age</SpecLabel>
+                  <SpecValue>{model.age}</SpecValue>
+                </SpecItem>
+              )}
+              {model.location && (
+                <SpecItem>
+                  <SpecLabel>Location</SpecLabel>
+                  <SpecValue>{model.location}</SpecValue>
+                </SpecItem>
+              )}
+            </SpecList>
+          </SectionContainer>
         </ModelInfo>
         
-        <ModelImageContainer
-          variants={elementVariants}
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.3 }}
-        >
-          <ModelImage
-            src={model.profileImage || '/images/placeholder.jpg'}
-            alt={model.name}
+        <ModelImageContainer variants={elementVariants}>
+          <ModelImage 
+            src={model.mainImage || '/images/models/placeholder.svg'} 
+            alt={model.name} 
+            onError={(e) => {
+              e.target.src = '/images/models/placeholder.svg';
+            }}
           />
         </ModelImageContainer>
       </TopSection>
       
-      <GalleryTitle variants={elementVariants}>
-        Portfolio
-      </GalleryTitle>
+      <div ref={portfolioRef}>
+        <GalleryTitle variants={elementVariants}>Portfolio</GalleryTitle>
+        {model.images && model.images.length > 0 ? (
+          <Gallery variants={elementVariants}>
+            {model.images.map((image, index) => (
+              <GalleryImage 
+                key={index} 
+                whileHover={imageHoverVariants.hover}
+                whileTap={imageHoverVariants.tap}
+                onClick={() => openModal(image)}
+              >
+                <Thumbnail 
+                  src={image} 
+                  alt={`${model.name} - Image ${index + 1}`}
+                  onError={(e) => {
+                    e.target.src = '/images/models/placeholder.svg';
+                  }}
+                />
+              </GalleryImage>
+            ))}
+          </Gallery>
+        ) : (
+          <p>No portfolio images available.</p>
+        )}
+      </div>
       
-      <Gallery variants={elementVariants}>
-        {model.portfolioImages && model.portfolioImages.map((image, index) => (
-          <GalleryImage
-            key={image.id || index}
-            variants={imageHoverVariants}
-            whileHover="hover"
-            onClick={() => openModal(image)}
+      <AnimatePresence>
+        {selectedImage && (
+          <Modal
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeModal}
           >
-            <Thumbnail src={image.imageUrl} alt={`${model.name} portfolio image ${index + 1}`} />
-          </GalleryImage>
-        ))}
-      </Gallery>
-      
-      {selectedImage && (
-        <Modal
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={closeModal}
-        >
-          <ModalContent
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CloseButton 
-              onClick={closeModal}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <ModalContent 
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
             >
-              ✕
-            </CloseButton>
-            <ModalImage 
-              src={selectedImage.imageUrl} 
-              alt="Enlarged portfolio image" 
-            />
-          </ModalContent>
-        </Modal>
-      )}
+              <CloseButton onClick={closeModal}>×</CloseButton>
+              <ModalImage src={selectedImage} alt="Model portfolio" />
+            </ModalContent>
+          </Modal>
+        )}
+      </AnimatePresence>
     </DetailsContainer>
   );
 };

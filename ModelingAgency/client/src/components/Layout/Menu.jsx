@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   menuVariants, 
   menuItemVariants,
@@ -84,10 +84,12 @@ const Overlay = styled(motion.div)`
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 98;
   backdrop-filter: blur(3px);
+  will-change: backdrop-filter, opacity;
 `;
 
 const Menu = ({ setMenuOpen }) => {
   const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
   
   const toggleSubmenu = (category) => {
     if (openSubmenu === category) {
@@ -97,93 +99,120 @@ const Menu = ({ setMenuOpen }) => {
     }
   };
   
+  const handleCloseMenu = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setMenuOpen(false);
+      setIsClosing(false);
+    }, 300);
+  };
+  
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.body.style.backdropFilter = 'none';
+    };
+  }, []);
+  
   return (
     <>
-      <Overlay 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={() => setMenuOpen(false)}
-      />
-      <MenuWrapper
-        initial="closed"
-        animate="open"
-        exit="closed"
-        variants={menuVariants}
-      >
-        <MenuItems>
-          <MenuItem variants={menuItemVariants}>
-            <MenuLink to="/" onClick={() => setMenuOpen(false)}>Home</MenuLink>
-          </MenuItem>
-          
-          <MenuItem variants={menuItemVariants}>
-            <div onClick={() => toggleSubmenu('female')}>
-              <MenuLink as="span">Female Models {openSubmenu === 'female' ? '−' : '+'}</MenuLink>
-            </div>
-            <Submenu
-              initial="hidden"
-              animate={openSubmenu === 'female' ? 'visible' : 'hidden'}
-              variants={submenuVariants}
-            >
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/female/established" onClick={() => setMenuOpen(false)}>
-                  Established
-                </InlineLink>
-              </SubmenuItem>
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/female/newfaces" onClick={() => setMenuOpen(false)}>
-                  New Faces
-                </InlineLink>
-              </SubmenuItem>
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/female/unique" onClick={() => setMenuOpen(false)}>
-                  Unique
-                </InlineLink>
-              </SubmenuItem>
-            </Submenu>
-          </MenuItem>
-          
-          <MenuItem variants={menuItemVariants}>
-            <div onClick={() => toggleSubmenu('male')}>
-              <MenuLink as="span">Male Models {openSubmenu === 'male' ? '−' : '+'}</MenuLink>
-            </div>
-            <Submenu
-              initial="hidden"
-              animate={openSubmenu === 'male' ? 'visible' : 'hidden'}
-              variants={submenuVariants}
-            >
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/male/established" onClick={() => setMenuOpen(false)}>
-                  Established
-                </InlineLink>
-              </SubmenuItem>
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/male/newfaces" onClick={() => setMenuOpen(false)}>
-                  New Faces
-                </InlineLink>
-              </SubmenuItem>
-              <SubmenuItem variants={submenuItemVariants}>
-                <InlineLink to="/models/male/unique" onClick={() => setMenuOpen(false)}>
-                  Unique
-                </InlineLink>
-              </SubmenuItem>
-            </Submenu>
-          </MenuItem>
-          
-          <MenuItem variants={menuItemVariants}>
-            <MenuLink to="/about" onClick={() => setMenuOpen(false)}>About</MenuLink>
-          </MenuItem>
-          
-          <MenuItem variants={menuItemVariants}>
-            <MenuLink to="/contact" onClick={() => setMenuOpen(false)}>Contact</MenuLink>
-          </MenuItem>
-          
-          <MenuItem variants={menuItemVariants}>
-            <MenuLink to="/apply" onClick={() => setMenuOpen(false)}>Apply</MenuLink>
-          </MenuItem>
-        </MenuItems>
-      </MenuWrapper>
+      <AnimatePresence mode="wait">
+        <Overlay 
+          key="overlay"
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ 
+            opacity: 1, 
+            backdropFilter: 'blur(3px)',
+            transition: { duration: 0.3 } 
+          }}
+          exit={{ 
+            opacity: 0, 
+            backdropFilter: 'blur(0px)',
+            transition: { duration: 0.3 } 
+          }}
+          onClick={handleCloseMenu}
+        />
+      
+        <MenuWrapper
+          key="menu"
+          initial="closed"
+          animate="open"
+          exit="closed"
+          variants={menuVariants}
+        >
+          <MenuItems>
+            <MenuItem variants={menuItemVariants}>
+              <MenuLink to="/" onClick={handleCloseMenu}>Home</MenuLink>
+            </MenuItem>
+            
+            <MenuItem variants={menuItemVariants}>
+              <div onClick={() => toggleSubmenu('female')}>
+                <MenuLink as="span">Female Models {openSubmenu === 'female' ? '−' : '+'}</MenuLink>
+              </div>
+              <Submenu
+                initial="hidden"
+                animate={openSubmenu === 'female' ? 'visible' : 'hidden'}
+                variants={submenuVariants}
+              >
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/female/established" onClick={handleCloseMenu}>
+                    Established
+                  </InlineLink>
+                </SubmenuItem>
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/female/newfaces" onClick={handleCloseMenu}>
+                    New Faces
+                  </InlineLink>
+                </SubmenuItem>
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/female/unique" onClick={handleCloseMenu}>
+                    Unique
+                  </InlineLink>
+                </SubmenuItem>
+              </Submenu>
+            </MenuItem>
+            
+            <MenuItem variants={menuItemVariants}>
+              <div onClick={() => toggleSubmenu('male')}>
+                <MenuLink as="span">Male Models {openSubmenu === 'male' ? '−' : '+'}</MenuLink>
+              </div>
+              <Submenu
+                initial="hidden"
+                animate={openSubmenu === 'male' ? 'visible' : 'hidden'}
+                variants={submenuVariants}
+              >
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/male/established" onClick={handleCloseMenu}>
+                    Established
+                  </InlineLink>
+                </SubmenuItem>
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/male/newfaces" onClick={handleCloseMenu}>
+                    New Faces
+                  </InlineLink>
+                </SubmenuItem>
+                <SubmenuItem variants={submenuItemVariants}>
+                  <InlineLink to="/models/male/unique" onClick={handleCloseMenu}>
+                    Unique
+                  </InlineLink>
+                </SubmenuItem>
+              </Submenu>
+            </MenuItem>
+            
+            <MenuItem variants={menuItemVariants}>
+              <MenuLink to="/about" onClick={handleCloseMenu}>About</MenuLink>
+            </MenuItem>
+            
+            <MenuItem variants={menuItemVariants}>
+              <MenuLink to="/contact" onClick={handleCloseMenu}>Contact</MenuLink>
+            </MenuItem>
+            
+            <MenuItem variants={menuItemVariants}>
+              <MenuLink to="/apply" onClick={handleCloseMenu}>Apply</MenuLink>
+            </MenuItem>
+          </MenuItems>
+        </MenuWrapper>
+      </AnimatePresence>
     </>
   );
 };

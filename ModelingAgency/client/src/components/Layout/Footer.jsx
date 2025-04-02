@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 
@@ -40,11 +40,12 @@ const SectionTitle = styled.h3`
   }
 `;
 
-const FooterLink = styled(Link)`
+const FooterLink = styled.a`
   margin-bottom: 0.75rem;
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.3s ease;
+  cursor: pointer;
   
   &:hover {
     color: var(--accent);
@@ -96,6 +97,7 @@ const Copyright = styled.div`
 `;
 
 const Footer = () => {
+  const navigate = useNavigate();
   const [ref, isVisible] = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true
@@ -124,6 +126,46 @@ const Footer = () => {
     }
   };
   
+  const handleNavigation = (path, elementId = null) => {
+    // Check if we're already on the target page
+    const currentPath = window.location.pathname;
+    
+    if (currentPath === path) {
+      // We're on the same page, just scroll to the element
+      if (elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          window.scrollTo({
+            top: element.offsetTop - 100, // Adjust for header
+            behavior: 'smooth'
+          });
+        } else {
+          // Scroll to top if element not found
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        // No element specified, scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to the new page
+      navigate(path);
+      
+      // Scroll to element after navigation (with a slight delay)
+      if (elementId) {
+        setTimeout(() => {
+          const element = document.getElementById(elementId);
+          if (element) {
+            window.scrollTo({
+              top: element.offsetTop - 100,
+              behavior: 'smooth'
+            });
+          }
+        }, 500);
+      }
+    }
+  };
+  
   return (
     <FooterContainer>
       <FooterContent ref={ref}>
@@ -142,6 +184,7 @@ const Footer = () => {
               <SocialIcon 
                 href="https://instagram.com" 
                 target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -150,6 +193,7 @@ const Footer = () => {
               <SocialIcon 
                 href="https://facebook.com" 
                 target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -158,6 +202,7 @@ const Footer = () => {
               <SocialIcon 
                 href="https://twitter.com" 
                 target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -174,11 +219,11 @@ const Footer = () => {
         >
           <FooterSection variants={itemVariants}>
             <SectionTitle>Links</SectionTitle>
-            <FooterLink to="/">Home</FooterLink>
-            <FooterLink to="/models/female">Female Models</FooterLink>
-            <FooterLink to="/models/male">Male Models</FooterLink>
-            <FooterLink to="/about">About Us</FooterLink>
-            <FooterLink to="/contact">Contact</FooterLink>
+            <FooterLink onClick={() => handleNavigation('/')}>Home</FooterLink>
+            <FooterLink onClick={() => handleNavigation('/models/female')}>Female Models</FooterLink>
+            <FooterLink onClick={() => handleNavigation('/models/male')}>Male Models</FooterLink>
+            <FooterLink onClick={() => handleNavigation('/about', 'about-section')}>About Us</FooterLink>
+            <FooterLink onClick={() => handleNavigation('/contact', 'contact-form')}>Contact</FooterLink>
           </FooterSection>
         </motion.div>
         

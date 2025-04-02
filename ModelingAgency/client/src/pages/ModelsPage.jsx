@@ -41,14 +41,28 @@ const Subtitle = styled(motion.p)`
 const ModelsPage = () => {
   const { gender, category } = useParams();
   
+  // Convert category parameter to proper format for display
+  const formatCategoryName = (cat) => {
+    if (!cat) return null;
+    
+    // Handle specific category formats
+    if (cat.toLowerCase() === 'newfaces') {
+      return 'New Faces';
+    }
+    
+    // Capitalize first letter
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
+  };
+  
   let pageTitle = 'Our Models';
   let pageSubtitle = 'Discover our diverse roster of talented models';
+  const formattedCategory = formatCategoryName(category);
   
   if (gender) {
     pageTitle = `${gender.charAt(0).toUpperCase() + gender.slice(1)} Models`;
     
     if (category) {
-      pageTitle += ` - ${category.charAt(0).toUpperCase() + category.slice(1)}`;
+      pageTitle += ` - ${formattedCategory}`;
       
       if (category.toLowerCase() === 'established') {
         pageSubtitle = 'Our experienced models with proven track records in the industry';
@@ -65,8 +79,8 @@ const ModelsPage = () => {
   return (
     <PageContainer
       variants={pageVariants}
-      initial="initial"
-      animate="animate"
+      initial="hidden"
+      animate="visible"
       exit="exit"
     >
       <Header>
@@ -88,7 +102,7 @@ const ModelsPage = () => {
       
       <ModelGrid 
         gender={gender} 
-        initialCategory={category}
+        initialCategory={formattedCategory}
       />
     </PageContainer>
   );

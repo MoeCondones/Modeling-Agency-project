@@ -144,7 +144,7 @@ const About = () => {
   
   return (
     <>
-      <AboutSection>
+      <AboutSection id="about-section">
         <AboutContainer>
           <SectionTitle 
             initial={{ opacity: 0, y: 20 }}

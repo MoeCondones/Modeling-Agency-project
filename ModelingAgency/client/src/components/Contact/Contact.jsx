@@ -355,6 +355,7 @@ const Contact = () => {
           </ContactInfo>
           
           <ContactForm
+            id="contact-form"
             ref={ref2}
             initial={{ opacity: 0, x: 30 }}
             animate={isVisible2 ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }}
