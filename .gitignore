@@ -1,0 +1,30 @@
+# Node.js / React
+node_modules/
+/ModelingAgency/client/node_modules/
+/ModelingAgency/client/dist/
+/ModelingAgency/client/build/
+/ModelingAgency/client/.env
+/ModelingAgency/client/.env.local
+/ModelingAgency/client/.env.development.local
+/ModelingAgency/client/.env.test.local
+/ModelingAgency/client/.env.production.local
+/ModelingAgency/client/npm-debug.log*
+/ModelingAgency/client/yarn-debug.log*
+/ModelingAgency/client/yarn-error.log*
+
+# ASP.NET Core
+/ModelingAgency/*/bin/
+/ModelingAgency/*/obj/
+/ModelingAgency/*/.vs/
+/ModelingAgency/*.user
+/ModelingAgency/*/*.user
+/ModelingAgency/*/Properties/launchSettings.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 
